@@ -25,7 +25,16 @@ int GetBatteryVoltage(voltage_t *vbatt)
 
 int EPS_Init()
 {
-	return 0;
+	unsigned char I2C_add = EPS_I2C_ADDR;
+	int err = IsisEPS_initialize(&I2C_add,1); // TODO address
+	if (err != E_NO_SS_ERR && err != E_IS_INITIALIZED){
+		return -1;
+	}else{
+		IsisSolarPanelv2_initialize(slave2_spi); // TODO which slave
+		return 0;
+	}
+
+
 }
 
 int EPS_Conditioning()

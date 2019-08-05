@@ -10,7 +10,7 @@
 
 /*!
  * @brief	Starts the FRAM using drivers, and checks for errors.
- * @see FRAM.h
+ * @see FRAM.h // Raz: fast memory stays after restart. store var like "IS_SAT_DEPLOYED"
  */
 int StartFRAM();
 

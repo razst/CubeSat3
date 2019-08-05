@@ -11,6 +11,18 @@
 #include <hal/Storage/FRAM.h>
 
 
+// <Raz: added these claues - NEED TO CHANGE !!!!
+#define DEPLOY_FLAG_ADDR		0xFF		//<! is this the first activation after launch flag
+#define DEPLOY_FLAG_SIZE		4			//<! length in bytes of FIRST_ACTIVATION_FLAG
+
+#define TIME_FROM_FIRST_LOUNCH_ADDR		0xFF		//<! is this time we save to check if 30 min past after first deploy
+#define TIME_FROM_FIRST_LOUNCH_SIZE		4			//<! length in bytes of TIME_FROM_FIRST_LOUNCH_ADDR
+
+
+
+
+
+
 // <Satellite Management>
 #define FIRST_ACTIVATION_FLAG_ADDR		0x42		//<! is this the first activation after launch flag
 #define FIRST_ACTIVATION_FLAG_SIZE		4			//<! length in bytes of FIRST_ACTIVATION_FLAG
