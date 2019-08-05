@@ -30,8 +30,8 @@ int EPS_Init()
 	if (err != E_NO_SS_ERR && err != E_IS_INITIALIZED){
 		return -1;
 	}else{
-		IsisSolarPanelv2_initialize(slave2_spi); // TODO which slave
-		return 0;
+
+		return IsisSolarPanelv2_initialize(slave2_spi); // TODO which slave;
 	}
 
 
