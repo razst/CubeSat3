@@ -1,25 +1,24 @@
-#include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
-#include <freertos/task.h>
-
-#include <hal/Timing/Time.h>
-#include <hal/errors.h>
-
-#include <satellite-subsystems/IsisTRXVU.h>
-
+//#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
+//#include <freertos/semphr.h>
+//#include <freertos/task.h>
+#include <hal/boolean.h>
+//#include <hal/errors.h>
+//#include <hal/Timing/Time.h>
+//#include <satellite-subsystems/IsisTRXVU.h>
 #include <stdlib.h>
-#include <string.h>
+//#include <string.h>
+#include <SubSystemModules/Communication/SPL.h>
+#include <SubSystemModules/Communication/TRXVU.h>
+//#include "AckHandler.h"
+//#include "ActUponCommand.h"
+//#include "GlobalStandards.h"
+//#include "SatCommandHandler.h"
+//#include "SubSystemModules/Housekepping/TelemetryCollector.h"
+//#include "SubSystemModules/Maintenance/Maintenance.h"
+//#include "SubSystemModules/PowerManagment/EPS.h"
+//#include "TLM_management.h"
 
-#include "GlobalStandards.h"
-#include "TRXVU.h"
-#include "AckHandler.h"
-#include "ActUponCommand.h"
-#include "SatCommandHandler.h"
-#include "TLM_management.h"
-
-#include "SubSystemModules/PowerManagment/EPS.h"
-#include "SubSystemModules/Maintenance/Maintenance.h"
-#include "SubSystemModules/Housekepping/TelemetryCollector.h"
 #ifdef TESTING_TRXVU_FRAME_LENGTH
 #include <hal/Utility/util.h>
 #endif
@@ -41,18 +40,45 @@ xSemaphoreHandle xIsTransmitting = NULL; // mutex on transmission.
 
 void InitSemaphores()
 {
+	vSemaphoreCreateBinary(xIsTransmitting);
+	vSemaphoreCreateBinary(xDumpLock);
+	//xSemaphoreTake(xIsTransmitting,)
 }
 
 int InitTrxvu() {
-	return 0;
+	ISIStrxvuFrameLengths fl;
+	fl.maxAX25frameLengthRX = MAX_COMMAND_DATA_LENGTH; // TODO: change
+	fl.maxAX25frameLengthTX = 0;  //TODO: change
+	ISIStrxvuI2CAddress address;
+	address.addressVu_tc = I2C_TRXVU_TC_ADDR;
+	address.addressVu_rc = I2C_TRXVU_RC_ADDR;
+	int err = IsisTrxvu_initialize(&address,&fl,trxvu_bitrate_9600,1);
+
+	InitSemaphores();
+
+	return err;
+
 }
 
 int TRX_Logic() {
+
+	if (GetNumberOfFramesInBuffer()>0){
+
+	}
 	return 0;
 }
 
+/**
+ * get how many frames in the RC buffer
+ * @return the number of frames in the buffer. value less than 0 means an error
+ */
 int GetNumberOfFramesInBuffer() {
-	return 0;
+	int frameCount;
+	int err = IsisTrxvu_rcGetFrameCount(I2C_TRXVU_RC_ADDR,&frameCount);// TODO: do we pass the RC address??
+	if (err < 0)
+		return err;
+	else
+		return frameCount;
 }
 
 Boolean CheckTransmitionAllowed() {
