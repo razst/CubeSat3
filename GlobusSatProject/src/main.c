@@ -46,6 +46,8 @@ void taskMain()
 // main operation function. will be called upon software boot.
 int main()
 {
+	F_FILE *file;
+
 	xTaskHandle taskMainHandle;
 
 	// Raz: setting UART serial communication to PC

@@ -99,6 +99,42 @@ FileSystemResult c_fileWrite(char* c_file_name, void* element)
 }
 FileSystemResult fileWrite(char* file_name, void* element,int size)
 {
+	F_FILE *file;
+	file=f_open(file_name,"a");
+	if (!file)
+	{
+		int rc = f_getlasterror();
+		//optinos : too long / aloocation / return in printf the kind of error
+		return FS_FAIL;
+	}
+
+	// add timestamp  to the file
+	time_unix curr_time;
+	int err = Time_getUnixEpoch(&curr_time);
+	if (!err){
+		return err;
+	}
+
+	if(f_write(&curr_time,sizeof(curr_time),1,file)!=sizeof(curr_time) || f_getlasterror()!=F_NO_ERROR){
+		f_flush();
+		f_close();
+		return FS_FAIL;
+	}
+
+	// add element to the file
+	if(f_write(element,size,1,file)!=size || f_getlasterror()!=F_NO_ERROR){
+		f_flush();
+		f_close();
+		return FS_FAIL;
+	}
+
+	if(f_flush(file)!=F_NO_ERROR){
+		return FS_FAIL;
+	}
+	if(f_close(file)!=F_NO_ERROR){
+		return FS_FAIL;
+	}
+
 	return FS_SUCCSESS;
 }
 static FileSystemResult deleteElementsFromFile(char* file_name,unsigned long from_time,
@@ -111,11 +147,71 @@ FileSystemResult c_fileDeleteElements(char* c_file_name, time_unix from_time,
 {
 	return FS_SUCCSESS;
 }
+
+/**
+ *
+ * read = return the number of elements read
+ */
 FileSystemResult fileRead(char* c_file_name,byte* buffer, int size_of_buffer,
 		time_unix from_time, time_unix to_time, int* read, int element_size)
 {
+
+	// check from_time < to_time
+
+	F_FILE *file;
+	file=f_open(c_file_name,"r");
+	if (!file)
+	{
+		int rc = f_getlasterror();
+		//optinos : too long / aloocation / return in printf the kind of error
+		return FS_FAIL;
+	}
+
+	// get first timestamp
+	time_unix temp_time;
+	if (f_read(&temp_time,sizeof(time_unix),1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
+		f_close();
+		return FS_FAIL;
+	}
+
+	// seek for the first timestamp that is >= from_time
+	while (temp_time<from_time){
+		f_seek(file,element_size,SEEK_CUR);
+
+		if (f_read(&temp_time,sizeof(time_unix),1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
+			f_close();
+			return FS_FAIL;
+		}
+	}
+
+	read = 0;
+	int bufferPos=0;
+	// Continue reading into buffer until timestamp that is > to_time
+	while (temp_time<=to_time){
+
+		// add first timestamp into buffer
+		memcpy(&buffer[bufferPos],&temp_time,sizeof(time_unix));
+		bufferPos += sizeof(time_unix);
+		// add first element into buffer
+		if (f_read(&buffer[bufferPos],element_size,1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
+			f_close();
+			return FS_FAIL;
+		}
+		bufferPos += element_size;
+		read++;
+		if (f_read(&temp_time,sizeof(time_unix),1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
+			f_close();
+			return FS_FAIL;
+		}
+	}
+
+	if(f_close(file)!=F_NO_ERROR){
+		return FS_FAIL;
+	}
+
 	return FS_SUCCSESS;
 }
+
 FileSystemResult c_fileRead(char* c_file_name,byte* buffer, int size_of_buffer,
 		time_unix from_time, time_unix to_time, int* read,time_unix* last_read_time)
 {
