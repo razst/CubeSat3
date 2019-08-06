@@ -28,7 +28,7 @@ int GetBatteryVoltage(voltage_t *vbatt) // harel: what is the importance of reci
 	ieps_statcmd_t* p_rsp_code = NULL;
 
 	int err = IsisEPS_getEngHKDataCDB(EPS_I2C_BUS_INDEX , &board , &p_rawhk_data_cdb , &p_rsp_code );
-
+dfgsdgsd
 	if(err !=0 ){
 		return err;
 	}
@@ -55,7 +55,7 @@ int EPS_Init()
 
 		if(err != 0 ){
 			voltage_t tamp[] = DEFAULT_EPS_THRESHOLD_VOLTAGES;
-			memccpy(eps_threshold_voltages , tamp,sizeof(tamp));
+			memcpy(eps_threshold_voltages , tamp,sizeof(tamp));
 			return -3;
 		}
 	err = GetAlpha(&alpha);
@@ -73,6 +73,7 @@ int EPS_Init()
 int EPS_Conditioning()
 {
 	voltage_t curr_volt = GetBatteryVoltage(&vbatt);
+
 	// increase volt
 	if(curr_volt > prev_avg){
 		if(curr_volt > eps_threshold_voltages[INDEX_UP_FULL]){
