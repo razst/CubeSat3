@@ -184,7 +184,7 @@ FileSystemResult fileRead(char* c_file_name,byte* buffer, int size_of_buffer,
 		}
 	}
 
-	read = 0;
+	*read = 0;
 	int bufferPos=0;
 	// Continue reading into buffer until timestamp that is > to_time
 	while (temp_time<=to_time){
@@ -198,7 +198,7 @@ FileSystemResult fileRead(char* c_file_name,byte* buffer, int size_of_buffer,
 			return FS_FAIL;
 		}
 		bufferPos += element_size;
-		read++;
+		(*read)++;
 		if (f_read(&temp_time,sizeof(time_unix),1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
 			f_close();
 			return FS_FAIL;
