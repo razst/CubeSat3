@@ -9,6 +9,27 @@
 	#include <satellite-subsystems/GomEPS.h>
 #endif
 
+//harel's enum. need to change to the right channels
+typedef enum __attribute__ ((__packed__)) _channels_options
+{
+	//channels on
+	ch_full_on_3v3 = "11111111", ///< channels on full mode 3v3
+	ch_full_on_5v5 = "11111111", ///< channels on full mode 5v5
+	ch_cruise_on_3v3 = "00000000", ///< channels on cruise mode 3v3
+	ch_cruise_on_5v5 = "11111111", ///< channels on cruise mode 5v5
+	ch_safe_on_3v3 = "00000000", ///< channels on safe mode 3v3
+	ch_safe_on_5v5 = "00000000", ///< channels on safe mode 5v5
+
+	//channels off
+	ch_cruise_off_3v3 = "00000000", ///< channels off cruise mode 3v3
+	ch_cruise_off_5v5 = "11111111", ///< channels off cruise mode 5v5
+	ch_safe_off_3v3 = "00000000", ///< channels off safe mode 3v3
+	ch_safe_off_5v5 = "00000000", ///< channels off safe mode 5v5
+	ch_critical_off_3v3 = "00000000", ///< channels off critical mode 3v3
+	ch_critical_off_5v5 = "00000000", ///< channels off critical mode 5v5
+
+} channels_options;
+
 
 //TODO: update functions to only the relevant channels
 channel_t g_system_state;
@@ -23,29 +44,29 @@ unsigned char I2C_add = EPS_I2C_ADDR;
 int EnterFullMode()
 {
 	state = FullMode;
-	return IsisEPS_outputBusGroupOn(I2C_add , chmask3v3 , chmask5v5 , p_rsp_code);
+	return IsisEPS_outputBusGroupOn(I2C_add , ch_full_on_3v3 , ch_full_on_5v5 , p_rsp_code);
 }
 
 int EnterCruiseMode()
 {
 	state = CruiseMode;
-	int err1 = IsisEPS_outputBusGroupOn(I2C_add , chmask3v3 , chmask5v5 , p_rsp_code);
-	int err2 = IsisEPS_outputBusGroupOff(I2C_add , chmask3v3 , chmask5v5 , p_rsp_code);
+	int err1 = IsisEPS_outputBusGroupOn(I2C_add , ch_cruise_on_3v3 , ch_cruise_on_5v5 , p_rsp_code);
+	int err2 = IsisEPS_outputBusGroupOff(I2C_add , ch_cruise_off_3v3 , ch_cruise_off_5v5 , p_rsp_code);
 	return err1 == 0 ? err2 : err1;
 }
 
 int EnterSafeMode()
 {
 	state = SafeMode;
-	int err1 = IsisEPS_outputBusGroupOn(I2C_add , chmask3v3 , chmask5v5 , p_rsp_code);
-	int err2 = IsisEPS_outputBusGroupOff(I2C_add , chmask3v3 , chmask5v5 , p_rsp_code);
+	int err1 = IsisEPS_outputBusGroupOn(I2C_add , ch_safe_on_3v3 , ch_safe_on_5v5 , p_rsp_code);
+	int err2 = IsisEPS_outputBusGroupOff(I2C_add , ch_safe_off_3v3 , ch_safe_off_5v5 , p_rsp_code);
 	return err1 == 0 ? err2 : err1;
 }
 
 int EnterCriticalMode()
 {
 	state = CriticalMode;
-	return IsisEPS_outputBusGroupOff(I2C_add , chmask3v3 , chmask5v5 , p_rsp_code);
+	return IsisEPS_outputBusGroupOff(I2C_add , ch_critical_off_3v3 , ch_critical_off_5v5 , p_rsp_code);
 
 }
 
