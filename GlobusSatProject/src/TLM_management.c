@@ -48,16 +48,23 @@ typedef struct
 void delete_allTMFilesFromSD()
 {
 }
+
 // return -1 for FRAM fail
 static int getNumOfFilesInFS()
 {
 	FS fs;
-	return fs.num_of_files;
+	int err = FRAM_read(&fs,FSFRAM,sizeof(fs));
+	if (err < 0)
+		return err;
+	else
+		return fs.num_of_files;
 }
 //return -1 on fail
 static int setNumOfFilesInFS(int new_num_of_files)
 {
-	return 0;
+	FS fs;
+	fs.num_of_files = new_num_of_files;
+	return FRAM_write(&fs,FSFRAM,sizeof(fs));
 }
 FileSystemResult InitializeFS(Boolean first_time)
 {
@@ -65,8 +72,7 @@ FileSystemResult InitializeFS(Boolean first_time)
 }
 
 //only register the chain, files will create dynamically
-FileSystemResult c_fileCreate(char* c_file_name,
-		int size_of_element)
+FileSystemResult c_fileCreate(char* c_file_name, int size_of_element)
 {
 	return FS_SUCCSESS;
 }
@@ -77,7 +83,23 @@ static void writewithEpochtime(F_FILE* file, byte* data, int size,unsigned int t
 // get C_FILE struct from FRAM by name
 static Boolean get_C_FILE_struct(char* name,C_FILE* c_file,unsigned int *address)
 {
-	return FALSE;
+	int numOfFilesInFS = getNumOfFilesInFS();
+	int err;
+	C_FILE temp_c_file;
+	//
+	int FRAM_pos = C_FILES_BASE_ADDR;
+	err = FRAM_read(&temp_c_file,FRAM_pos,sizeof(C_FILE));
+	while (numOfFilesInFS && !strcmp(temp_c_file.name,name)){
+		numOfFilesInFS--;
+		FRAM_pos += sizeof(C_FILE);
+		err = FRAM_read(&temp_c_file,FRAM_pos,sizeof(C_FILE));
+	}
+
+	if ((numOfFilesInFS>0) && !err){
+		address = FRAM_pos;
+		memcpy(&c_file,&temp_c_file,sizeof(temp_c_file));
+	}else
+		return FALSE;
 }
 //calculate index of file in chain file by time
 static int getFileIndex(unsigned int creation_time, unsigned int current_time)
@@ -116,15 +138,15 @@ FileSystemResult fileWrite(char* file_name, void* element,int size)
 	}
 
 	if(f_write(&curr_time,sizeof(curr_time),1,file)!=sizeof(curr_time) || f_getlasterror()!=F_NO_ERROR){
-		f_flush();
-		f_close();
+		f_flush(file);
+		f_close(file);
 		return FS_FAIL;
 	}
 
 	// add element to the file
 	if(f_write(element,size,1,file)!=size || f_getlasterror()!=F_NO_ERROR){
-		f_flush();
-		f_close();
+		f_flush(file);
+		f_close(file);
 		return FS_FAIL;
 	}
 
@@ -170,7 +192,7 @@ FileSystemResult fileRead(char* c_file_name,byte* buffer, int size_of_buffer,
 	// get first timestamp
 	time_unix temp_time;
 	if (f_read(&temp_time,sizeof(time_unix),1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
-		f_close();
+		f_close(file);
 		return FS_FAIL;
 	}
 
@@ -179,7 +201,7 @@ FileSystemResult fileRead(char* c_file_name,byte* buffer, int size_of_buffer,
 		f_seek(file,element_size,SEEK_CUR);
 
 		if (f_read(&temp_time,sizeof(time_unix),1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
-			f_close();
+			f_close(file);
 			return FS_FAIL;
 		}
 	}
@@ -194,13 +216,13 @@ FileSystemResult fileRead(char* c_file_name,byte* buffer, int size_of_buffer,
 		bufferPos += sizeof(time_unix);
 		// add first element into buffer
 		if (f_read(&buffer[bufferPos],element_size,1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
-			f_close();
+			f_close(file);
 			return FS_FAIL;
 		}
 		bufferPos += element_size;
 		(*read)++;
 		if (f_read(&temp_time,sizeof(time_unix),1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
-			f_close();
+			f_close(file);
 			return FS_FAIL;
 		}
 	}
