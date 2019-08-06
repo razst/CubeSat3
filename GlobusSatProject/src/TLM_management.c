@@ -23,11 +23,11 @@
 #define _SD_CARD 0
 #define FIRST_TIME -1
 #define FILE_NAME_WITH_INDEX_SIZE MAX_F_FILE_NAME_SIZE+sizeof(int)*2
-
+#define MAX_SEC_PER_FILE 10000
 //struct for filesystem info
 typedef struct
 {
-	int num_of_files;
+	int num_of_chains;
 } FS;
 //TODO remove all 'PLZNORESTART' from code!!
 #define PLZNORESTART() gom_eps_hk_basic_t myEpsTelemetry_hk_basic;	(GomEpsGetHkData_basic(0, &myEpsTelemetry_hk_basic)); //todo delete
@@ -48,23 +48,20 @@ typedef struct
 void delete_allTMFilesFromSD()
 {
 }
-
 // return -1 for FRAM fail
-static int getNumOfFilesInFS()
+static int getNumOfChainsInFS()
 {
 	FS fs;
-	int err = FRAM_read(&fs,FSFRAM,sizeof(fs));
-	if (err < 0)
-		return err;
-	else
-		return fs.num_of_files;
+	FRAM_read(&fs,FSFRAM,sizeof(fs));
+	return fs.num_of_chains;
 }
 //return -1 on fail
-static int setNumOfFilesInFS(int new_num_of_files)
+static int setNumOfChainsInFS(int new_num_of_chains)
 {
 	FS fs;
-	fs.num_of_files = new_num_of_files;
-	return FRAM_write(&fs,FSFRAM,sizeof(fs));
+	fs.num_of_chains = new_num_of_chains;
+	FRAM_write(&fs,FSFRAM,sizeof(fs));
+	return 0;
 }
 FileSystemResult InitializeFS(Boolean first_time)
 {
@@ -72,8 +69,19 @@ FileSystemResult InitializeFS(Boolean first_time)
 }
 
 //only register the chain, files will create dynamically
-FileSystemResult c_fileCreate(char* c_file_name, int size_of_element)
+FileSystemResult c_fileCreate(char* c_file_name,int size_of_element)
 {
+	time_unix currTime = Time_getUnixEpoch();
+	C_FILE c_file;
+	c_file.name = c_file_name;
+	c_file.creation_time = currTime;
+	c_file.last_time_modified = -1;
+	c_file.num_of_files = 0;
+	c_file.size_of_element = size_of_element;
+	int err = FRAM_write(&c_file,C_FILES_BASE_ADDR*(getNumOfChainsInFS()+sizeof(c_file)),sizeof(c_file));
+	setNumOfChainsInFS(getNumOfChainsInFS()+1);
+	if(err < 0)
+		return FS_FRAM_FAIL;
 	return FS_SUCCSESS;
 }
 //write element with timestamp to file
@@ -83,32 +91,18 @@ static void writewithEpochtime(F_FILE* file, byte* data, int size,unsigned int t
 // get C_FILE struct from FRAM by name
 static Boolean get_C_FILE_struct(char* name,C_FILE* c_file,unsigned int *address)
 {
-	int numOfFilesInFS = getNumOfFilesInFS();
-	int err;
-	C_FILE temp_c_file;
-	//
-	int FRAM_pos = C_FILES_BASE_ADDR;
-	err = FRAM_read(&temp_c_file,FRAM_pos,sizeof(C_FILE));
-	while (numOfFilesInFS && !strcmp(temp_c_file.name,name)){
-		numOfFilesInFS--;
-		FRAM_pos += sizeof(C_FILE);
-		err = FRAM_read(&temp_c_file,FRAM_pos,sizeof(C_FILE));
-	}
-
-	if ((numOfFilesInFS>0) && !err){
-		address = FRAM_pos;
-		memcpy(&c_file,&temp_c_file,sizeof(temp_c_file));
-	}else
-		return FALSE;
+	return FALSE;
 }
 //calculate index of file in chain file by time
 static int getFileIndex(unsigned int creation_time, unsigned int current_time)
 {
-	return 0;
+	return (current_time-creation_time)/MAX_SEC_PER_FILE;
 }
 //write to curr_file_name
 void get_file_name_by_index(char* c_file_name,int index,char* curr_file_name)
 {
+	get
+	int index = getFileIndex()
 }
 FileSystemResult c_fileReset(char* c_file_name)
 {
@@ -138,15 +132,15 @@ FileSystemResult fileWrite(char* file_name, void* element,int size)
 	}
 
 	if(f_write(&curr_time,sizeof(curr_time),1,file)!=sizeof(curr_time) || f_getlasterror()!=F_NO_ERROR){
-		f_flush(file);
-		f_close(file);
+		f_flush();
+		f_close();
 		return FS_FAIL;
 	}
 
 	// add element to the file
 	if(f_write(element,size,1,file)!=size || f_getlasterror()!=F_NO_ERROR){
-		f_flush(file);
-		f_close(file);
+		f_flush();
+		f_close();
 		return FS_FAIL;
 	}
 
@@ -192,7 +186,7 @@ FileSystemResult fileRead(char* c_file_name,byte* buffer, int size_of_buffer,
 	// get first timestamp
 	time_unix temp_time;
 	if (f_read(&temp_time,sizeof(time_unix),1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
-		f_close(file);
+		f_close();
 		return FS_FAIL;
 	}
 
@@ -201,7 +195,7 @@ FileSystemResult fileRead(char* c_file_name,byte* buffer, int size_of_buffer,
 		f_seek(file,element_size,SEEK_CUR);
 
 		if (f_read(&temp_time,sizeof(time_unix),1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
-			f_close(file);
+			f_close();
 			return FS_FAIL;
 		}
 	}
@@ -216,13 +210,13 @@ FileSystemResult fileRead(char* c_file_name,byte* buffer, int size_of_buffer,
 		bufferPos += sizeof(time_unix);
 		// add first element into buffer
 		if (f_read(&buffer[bufferPos],element_size,1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
-			f_close(file);
+			f_close();
 			return FS_FAIL;
 		}
 		bufferPos += element_size;
 		(*read)++;
 		if (f_read(&temp_time,sizeof(time_unix),1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
-			f_close(file);
+			f_close();
 			return FS_FAIL;
 		}
 	}
