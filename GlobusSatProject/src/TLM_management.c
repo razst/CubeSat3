@@ -23,7 +23,7 @@
 #define _SD_CARD 0
 #define FIRST_TIME -1
 #define FILE_NAME_WITH_INDEX_SIZE MAX_F_FILE_NAME_SIZE+sizeof(int)*2
-#define MAX_SEC_PER_FILE 10000
+
 //struct for filesystem info
 typedef struct
 {
@@ -96,13 +96,13 @@ static Boolean get_C_FILE_struct(char* name,C_FILE* c_file,unsigned int *address
 //calculate index of file in chain file by time
 static int getFileIndex(unsigned int creation_time, unsigned int current_time)
 {
-	return (current_time-creation_time)/MAX_SEC_PER_FILE;
+	return (current_time-creation_time)/SKIP_FILE_TIME_SEC;
 }
 //write to curr_file_name
 void get_file_name_by_index(char* c_file_name,int index,char* curr_file_name)
 {
-	get
-	int index = getFileIndex()
+	//get
+	//int index = getFileIndex()
 }
 FileSystemResult c_fileReset(char* c_file_name)
 {
@@ -231,6 +231,7 @@ FileSystemResult fileRead(char* c_file_name,byte* buffer, int size_of_buffer,
 FileSystemResult c_fileRead(char* c_file_name,byte* buffer, int size_of_buffer,
 		time_unix from_time, time_unix to_time, int* read,time_unix* last_read_time)
 {
+
 	return FS_SUCCSESS;
 }
 void print_file(char* c_file_name)
