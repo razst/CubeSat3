@@ -1005,9 +1005,9 @@ Discarded input sections
  .bss           0x00000000        0x0 ./src/TLM_management.o
  .text.delete_allTMFilesFromSD
                 0x00000000       0x14 ./src/TLM_management.o
- .text.getNumOfFilesInFS
-                0x00000000       0x48 ./src/TLM_management.o
- .text.setNumOfFilesInFS
+ .text.getNumOfChainsInFS
+                0x00000000       0x30 ./src/TLM_management.o
+ .text.setNumOfChainsInFS
                 0x00000000       0x3c ./src/TLM_management.o
  .text.InitializeFS
                 0x00000000       0x24 ./src/TLM_management.o
@@ -1016,9 +1016,9 @@ Discarded input sections
  .text.writewithEpochtime
                 0x00000000       0x28 ./src/TLM_management.o
  .text.get_C_FILE_struct
-                0x00000000       0xf8 ./src/TLM_management.o
+                0x00000000       0x2c ./src/TLM_management.o
  .text.getFileIndex
-                0x00000000       0x28 ./src/TLM_management.o
+                0x00000000       0x40 ./src/TLM_management.o
  .text.get_file_name_by_index
                 0x00000000       0x24 ./src/TLM_management.o
  .text.c_fileReset
@@ -1040,18 +1040,18 @@ Discarded input sections
                 0x00000000       0x1c ./src/TLM_management.o
  .text.DeInitializeFS
                 0x00000000       0x14 ./src/TLM_management.o
- .debug_info    0x00000000      0x71d ./src/TLM_management.o
+ .debug_info    0x00000000      0x6d4 ./src/TLM_management.o
  .debug_abbrev  0x00000000      0x1b4 ./src/TLM_management.o
  .debug_loc     0x00000000      0x318 ./src/TLM_management.o
  .debug_aranges
                 0x00000000       0xa8 ./src/TLM_management.o
  .debug_ranges  0x00000000       0x98 ./src/TLM_management.o
- .debug_line    0x00000000      0x300 ./src/TLM_management.o
- .debug_str     0x00000000      0x46e ./src/TLM_management.o
+ .debug_line    0x00000000      0x2e4 ./src/TLM_management.o
+ .debug_str     0x00000000      0x45b ./src/TLM_management.o
  .comment       0x00000000       0x71 ./src/TLM_management.o
  .ARM.attributes
                 0x00000000       0x32 ./src/TLM_management.o
- .debug_frame   0x00000000      0x1d8 ./src/TLM_management.o
+ .debug_frame   0x00000000      0x1d0 ./src/TLM_management.o
  .text          0x00000000        0x0 ./src/main.o
  .data          0x00000000        0x0 ./src/main.o
  .bss           0x00000000        0x0 ./src/main.o

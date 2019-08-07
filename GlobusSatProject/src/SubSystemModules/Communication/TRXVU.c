@@ -25,7 +25,7 @@
 #define SIZE_RXFRAME	200
 #define SIZE_TXFRAME	235
 
-
+#define ANT_ADDR 0x31 // TODO: Check this addres !!!
 Boolean 		g_mute_flag = MUTE_OFF;				// mute flag - is the mute enabled
 time_unix 		g_mute_end_time = 0;				// time at which the mute will end
 time_unix 		g_prev_beacon_time = 0;				// the time at which the previous beacon occured
@@ -47,23 +47,55 @@ void InitSemaphores()
 
 int InitTrxvu() {
 	ISIStrxvuFrameLengths fl;
-	fl.maxAX25frameLengthRX = MAX_COMMAND_DATA_LENGTH; // TODO: change
-	fl.maxAX25frameLengthTX = 0;  //TODO: change
+	fl.maxAX25frameLengthRX = SIZE_RXFRAME; // TODO: change
+	fl.maxAX25frameLengthTX = SIZE_RXFRAME;  //TODO: change
 	ISIStrxvuI2CAddress address;
 	address.addressVu_tc = I2C_TRXVU_TC_ADDR;
 	address.addressVu_rc = I2C_TRXVU_RC_ADDR;
-	int err = IsisTrxvu_initialize(&address,&fl,trxvu_bitrate_9600,1);
+	int bitRate = trxvu_bitrate_9600;
+	int err = IsisTrxvu_initialize(&address,&fl,&bitRate,1);
+	if (err!=0)
+		return err;
+
+
+	err = IsisAntS_initialize(ANT_ADDR,1);
+	if (err!=0)
+			return err;
 
 	InitSemaphores();
+
+	err = FRAM_read(&g_current_beacon_period,BEACON_INTERVAL_TIME_ADDR,BEACON_INTERVAL_TIME_SIZE);
+	if (err!=0){
+		g_current_beacon_period = DEFAULT_BEACON_INTERVAL_TIME;
+	}
+
+	err = FRAM_read(&g_beacon_change_baud_period,BEACON_BITRATE_CYCLE_ADDR,BEACON_BITRATE_CYCLE_SIZE);
+	if (err!=0){
+		g_beacon_change_baud_period = DEFALUT_BEACON_BITRATE_CYCLE;
+	}
+
 	return err;
 
 }
 
 int TRX_Logic() {
 
-	if (GetNumberOfFramesInBuffer()>0){
+	int numOfFrames = GetNumberOfFramesInBuffer();
+	if (numOfFrames>0){
+		ResetGroundCommWDT();
+		sat_packet_t cmd;
+		GetOnlineCommand(&cmd);
 
+	}else if (GetDelayedCommandBufferCount()>0){
+			//GetDelayedCommand
+			Boolean expired;
+			//isDelayedCommandDue(,&expired);
+			if (expired){
+			}
+		}
 	}
+	ActUponCommand(&cmd);
+	BeaconLogic();
 	return 0;
 }
 
@@ -73,7 +105,7 @@ int TRX_Logic() {
  */
 int GetNumberOfFramesInBuffer() {
 	int frameCount;
-	int err = IsisTrxvu_rcGetFrameCount(I2C_TRXVU_RC_ADDR,&frameCount);// TODO: do we pass the RC address??
+	int err = IsisTrxvu_rcGetFrameCount(I2C_TRXVU_RC_ADDR,&frameCount);// TODO: do we pass the RC address?? - YES
 	if (err < 0)
 		return err;
 	else
@@ -113,6 +145,9 @@ int BeaconSetBitrate() {
 }
 
 void BeaconLogic() {
+	time_unix currTime;
+	Time_getUnixEpoch(&currTime);
+
 }
 
 int muteTRXVU(time_unix duration) {

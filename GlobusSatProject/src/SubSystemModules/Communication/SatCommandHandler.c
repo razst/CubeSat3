@@ -56,6 +56,23 @@ int GetDelayedCommandBufferCount()
 
 int GetOnlineCommand(sat_packet_t *cmd)
 {
+	unsigned char data[MAX_COMMAND_DATA_LENGTH];
+	int addr = I2C_TRXVU_RC_ADDR;
+	ISIStrxvuRxFrame frame;
+	frame.rx_doppler = 0;
+	frame.rx_framedata = 0;
+	frame.rx_length = 0;
+	frame.rx_rssi = &data;
+	int err = IsisTrxvu_rcGetCommandFrame(&addr,&frame);
+	if (err !=0)
+		return err;
+	sat_packet_t command;
+	int err = ParseDataToCommand(&data,MAX_COMMAND_DATA_LENGTH,&command);
+	if (err !=0)
+		return err;
+	cmd = &command;
+	SendAckPacket(ACK_RECEIVE_COMM,&command,NULL,0);
+
 	return 0;
 }
 

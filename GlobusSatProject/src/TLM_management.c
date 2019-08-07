@@ -133,15 +133,15 @@ FileSystemResult fileWrite(char* file_name, void* element,int size)
 	}
 
 	if(f_write(&curr_time,sizeof(curr_time),1,file)!=sizeof(curr_time) || f_getlasterror()!=F_NO_ERROR){
-		f_flush();
-		f_close();
+		f_flush(file);
+		f_close(file);
 		return FS_FAIL;
 	}
 
 	// add element to the file
 	if(f_write(element,size,1,file)!=size || f_getlasterror()!=F_NO_ERROR){
-		f_flush();
-		f_close();
+		f_flush(file);
+		f_close(file);
 		return FS_FAIL;
 	}
 
@@ -187,7 +187,7 @@ FileSystemResult fileRead(char* c_file_name,byte* buffer, int size_of_buffer,
 	// get first timestamp
 	time_unix temp_time;
 	if (f_read(&temp_time,sizeof(time_unix),1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
-		f_close();
+		f_close(file);
 		return FS_FAIL;
 	}
 
@@ -196,7 +196,7 @@ FileSystemResult fileRead(char* c_file_name,byte* buffer, int size_of_buffer,
 		f_seek(file,element_size,SEEK_CUR);
 
 		if (f_read(&temp_time,sizeof(time_unix),1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
-			f_close();
+			f_close(file);
 			return FS_FAIL;
 		}
 	}
@@ -211,13 +211,13 @@ FileSystemResult fileRead(char* c_file_name,byte* buffer, int size_of_buffer,
 		bufferPos += sizeof(time_unix);
 		// add first element into buffer
 		if (f_read(&buffer[bufferPos],element_size,1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
-			f_close();
+			f_close(file);
 			return FS_FAIL;
 		}
 		bufferPos += element_size;
 		(*read)++;
 		if (f_read(&temp_time,sizeof(time_unix),1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
-			f_close();
+			f_close(file);
 			return FS_FAIL;
 		}
 	}
