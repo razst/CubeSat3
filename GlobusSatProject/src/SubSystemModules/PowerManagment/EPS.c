@@ -149,7 +149,7 @@ int GetAlpha(float *alpha)
 {
 	FRAM_read(&alpha , EPS_ALPHA_FILTER_VALUE_ADDR , EPS_ALPHA_FILTER_VALUE_SIZE);
 	if(alpha == NULL){
-		return -1;
+		return -1;//
 	}
 	return alpha;
 }
