@@ -1,23 +1,23 @@
-//#include <freertos/FreeRTOS.h>
+#include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
-//#include <freertos/semphr.h>
-//#include <freertos/task.h>
+#include <freertos/semphr.h>
+#include <freertos/task.h>
 #include <hal/boolean.h>
-//#include <hal/errors.h>
-//#include <hal/Timing/Time.h>
-//#include <satellite-subsystems/IsisTRXVU.h>
+#include <hal/errors.h>
+#include <hal/Timing/Time.h>
+#include <satellite-subsystems/IsisTRXVU.h>
 #include <stdlib.h>
-//#include <string.h>
+#include <string.h>
 #include <SubSystemModules/Communication/SPL.h>
 #include <SubSystemModules/Communication/TRXVU.h>
-//#include "AckHandler.h"
-//#include "ActUponCommand.h"
-//#include "GlobalStandards.h"
-//#include "SatCommandHandler.h"
-//#include "SubSystemModules/Housekepping/TelemetryCollector.h"
-//#include "SubSystemModules/Maintenance/Maintenance.h"
-//#include "SubSystemModules/PowerManagment/EPS.h"
-//#include "TLM_management.h"
+#include "AckHandler.h"
+#include "ActUponCommand.h"
+#include "GlobalStandards.h"
+#include "SatCommandHandler.h"
+#include "SubSystemModules/Housekepping/TelemetryCollector.h"
+#include "SubSystemModules/Maintenance/Maintenance.h"
+#include "SubSystemModules/PowerManagment/EPS.h"
+#include "TLM_management.h"
 
 #ifdef TESTING_TRXVU_FRAME_LENGTH
 #include <hal/Utility/util.h>
@@ -55,7 +55,6 @@ int InitTrxvu() {
 	int err = IsisTrxvu_initialize(&address,&fl,trxvu_bitrate_9600,1);
 
 	InitSemaphores();
-
 	return err;
 
 }

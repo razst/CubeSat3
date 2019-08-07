@@ -23,16 +23,16 @@ voltage_t eps_threshold_voltages[NUMBER_OF_THRESHOLD_VOLTAGES];	// saves the cur
 
 int GetBatteryVoltage(voltage_t *vbatt) // harel: what is the importance of recived parameter
 {
-	ieps_board_mb board;
-	ieps_enghk_data_cdb_t* p_rawhk_data_cdb = NULL;
-	ieps_statcmd_t* p_rsp_code = NULL;
+	ieps_board_t board;
+	ieps_enghk_data_cdb_t p_rawhk_data_cdb ;
+	ieps_statcmd_t p_rsp_code;
 
-	int err = IsisEPS_getEngHKDataCDB(EPS_I2C_BUS_INDEX , &board , &p_rawhk_data_cdb , &p_rsp_code );
+	int err = IsisEPS_getEngHKDataCDB(EPS_I2C_BUS_INDEX , board , &p_rawhk_data_cdb , &p_rsp_code );
 
 	if(err !=0 ){
 		return err;
 	}
-	vbatt = p_rawhk_data_cdb;
+	*vbatt = p_rawhk_data_cdb.fields.bat_voltage;
 	return 0;
 }
 
