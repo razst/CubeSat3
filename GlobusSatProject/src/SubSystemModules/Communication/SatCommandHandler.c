@@ -44,6 +44,7 @@ Boolean isDelayedCommandDue(time_unix cmd_time, Boolean *expired)
 		for(int i = 0; i < MAX_DELAYED_COMMAND ; i++){
 			FRAM_read(&cmdTime , DELAYED_COMMAND_DUE_ADDR + (i*DELAYED_COMMAND_DUE_SIZE), DELAYED_COMMAND_DUE_SIZE);
 			if(cmdTime == cmd_time){
+
 				return TRUE;
 			}
 		}

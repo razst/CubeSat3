@@ -79,22 +79,25 @@ int InitTrxvu() {
 }
 
 int TRX_Logic() {
+	time_unix currTime;
+	sat_packet_t cmd;
+	cmd.ID = -1;
+	int i = -1;
 
+	Time_getUnixEpoch(&currTime);
 	int numOfFrames = GetNumberOfFramesInBuffer();
 	if (numOfFrames>0){
 		ResetGroundCommWDT();
-		sat_packet_t cmd;
 		GetOnlineCommand(&cmd);
-
-	}else if (GetDelayedCommandBufferCount()>0){
-			//GetDelayedCommand
-			Boolean expired;
-			//isDelayedCommandDue(,&expired);
-			if (expired){
-			}
-		}
+	}else if (GetDelayedCommandBufferCount()>0 && isDelayedCommandDue(currTime,NULL)){
+		 i = GetDelayedCommand(&cmd);
 	}
-	ActUponCommand(&cmd);
+	if(cmd != -1)
+		ActUponCommand(&cmd);
+
+	if(i != -1)
+		DeleteDelayedCommandByIndex(i);
+
 	BeaconLogic();
 	return 0;
 }
