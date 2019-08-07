@@ -28,7 +28,7 @@ int GetBatteryVoltage(voltage_t *vbatt) // harel: what is the importance of reci
 	ieps_statcmd_t* p_rsp_code = NULL;
 
 	int err = IsisEPS_getEngHKDataCDB(EPS_I2C_BUS_INDEX , &board , &p_rawhk_data_cdb , &p_rsp_code );
-dfgsdgsd
+
 	if(err !=0 ){
 		return err;
 	}
