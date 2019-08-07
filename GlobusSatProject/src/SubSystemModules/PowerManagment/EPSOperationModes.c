@@ -44,7 +44,7 @@ unsigned char I2C_add = EPS_I2C_ADDR;
 int EnterFullMode()
 {
 	state = FullMode;
-	return IsisEPS_outputBusGroupOn(I2C_add , ch_full_on_3v3 , ch_full_on_5v5 , p_rsp_code);
+	return 0;//IsisEPS_outputBusGroupOn(I2C_add , ch_full_on_3v3 , ch_full_on_5v5 , p_rsp_code);
 }
 
 int EnterCruiseMode()
@@ -52,7 +52,7 @@ int EnterCruiseMode()
 	state = CruiseMode;
 //	int err1 = IsisEPS_outputBusGroupOn(I2C_add , ch_cruise_on_3v3 , ch_cruise_on_5v5 , p_rsp_code);
 //	int err2 = IsisEPS_outputBusGroupOff(I2C_add , ch_cruise_off_3v3 , ch_cruise_off_5v5 , p_rsp_code);
-	return err1 == 0 ? err2 : err1;
+	return 0;//err1 == 0 ? err2 : err1;
 }
 
 int EnterSafeMode()
@@ -60,7 +60,7 @@ int EnterSafeMode()
 	state = SafeMode;
 //	int err1 = IsisEPS_outputBusGroupOn(I2C_add , ch_safe_on_3v3 , ch_safe_on_5v5 , p_rsp_code);
 //	int err2 = IsisEPS_outputBusGroupOff(I2C_add , ch_safe_off_3v3 , ch_safe_off_5v5 , p_rsp_code);
-	return err1 == 0 ? err2 : err1;
+	return 0;//err1 == 0 ? err2 : err1;
 }
 
 int EnterCriticalMode()
