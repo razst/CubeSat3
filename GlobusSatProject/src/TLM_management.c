@@ -229,6 +229,31 @@ FileSystemResult fileRead(char* c_file_name,byte* buffer, int size_of_buffer,
 	return FS_SUCCSESS;
 }
 
+/**
+ *
+ * read = return the number of elements read
+ */
+FileSystemResult fileReadGeneral(char* file_name,byte* buffer, int size_of_buffer)
+{
+
+	// check from_time < to_time
+
+	F_FILE *file;
+	file=f_open(file_name,"r");
+	if (!file)
+	{
+		int rc = f_getlasterror();
+		//optinos : too long / aloocation / return in printf the kind of error
+		return FS_FAIL;
+	}
+
+	if (f_read(&buffer,size_of_buffer,1,file)!=1 || f_getlasterror()!=F_NO_ERROR){
+		f_close(file);
+		return FS_FAIL;
+	}
+	return FS_SUCCSESS;
+}
+
 FileSystemResult c_fileRead(char* c_file_name,byte* buffer, int size_of_buffer,
 		time_unix from_time, time_unix to_time, int* read,time_unix* last_read_time)
 {

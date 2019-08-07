@@ -20,6 +20,9 @@
 
 
 
+#define DELAYED_COMMAND_DUE_ADDR        0xCC /// TBD check address
+#define DELAYED_COMMAND_DUE_SIZE        4
+#define MAX_DELAYED_COMMAND             100
 
 
 

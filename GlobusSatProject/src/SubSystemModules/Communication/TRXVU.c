@@ -113,7 +113,7 @@ int GetNumberOfFramesInBuffer() {
 }
 
 Boolean CheckTransmitionAllowed() {
-	return FALSE;
+	return (pdTRUE == xSemaphoreTake(xIsTransmitting , 0));
 }
 
 
@@ -140,13 +140,38 @@ int DumpTelemetry(sat_packet_t *cmd) {
 }
 
 //Sets the bitrate to 1200 every third beacon and to 9600 otherwise
-int BeaconSetBitrate() {
-	return 0;
+Boolean BeaconSetBitrate() {
+	if(g_beacon_change_baud_period == DEFALUT_BEACON_BITRATE_CYCLE){
+		IsisTrxvu_tcSetAx25Bitrate(I2C_TRXVU_RC_ADDR , trxvu_bitrate_1200);
+		g_beacon_change_baud_period = 0;
+		return TRUE;
+	}else {
+		IsisTrxvu_tcSetAx25Bitrate(I2C_TRXVU_RC_ADDR , trxvu_bitrate_9600);
+		g_beacon_change_baud_period++;
+		return FALSE;
+	}
 }
 
 void BeaconLogic() {
+	if(!CheckTransmitionAllowed())
+		return;
+
 	time_unix currTime;
 	Time_getUnixEpoch(&currTime);
+	if(currTime - g_prev_beacon_time > g_beacon_interval_time){
+		Boolean changedRate = BeaconSetBitrate();
+		WOD_Telemetry_t wod;
+		sat_packet_t cmd;
+		GetCurrentWODTelemetry(&wod);
+
+		AssmbleCommand(&wod, sizeof(&wod) , trxvu_cmd_type , BEACON_SUBTYPE ,0xFF , &cmd);
+		TransmitSplPacket(&cmd , NULL);
+		if(changedRate)
+			IsisTrxvu_tcSetAx25Bitrate(I2C_TRXVU_RC_ADDR , trxvu_bitrate_9600);
+
+	}
+	xSemaphoreGive(xIsTransmitting);
+	UpdateBeaconInterval(&currTime);
 
 }
 
@@ -184,5 +209,7 @@ int UpdateBeaconBaudCycle(unsigned char cycle)
 }
 
 int UpdateBeaconInterval(time_unix intrvl) {
+	g_prev_beacon_time = intrvl;
+
 	return 0;
 }
