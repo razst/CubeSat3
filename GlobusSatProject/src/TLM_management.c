@@ -71,6 +71,7 @@ FileSystemResult InitializeFS(Boolean first_time)
 //only register the chain, files will create dynamically
 FileSystemResult c_fileCreate(char* c_file_name,int size_of_element)
 {
+	/*
 	time_unix currTime = Time_getUnixEpoch();
 	C_FILE c_file;
 	c_file.name = c_file_name;
@@ -81,7 +82,7 @@ FileSystemResult c_fileCreate(char* c_file_name,int size_of_element)
 	int err = FRAM_write(&c_file,C_FILES_BASE_ADDR*(getNumOfChainsInFS()+sizeof(c_file)),sizeof(c_file));
 	setNumOfChainsInFS(getNumOfChainsInFS()+1);
 	if(err < 0)
-		return FS_FRAM_FAIL;
+		return FS_FRAM_FAIL;*/
 	return FS_SUCCSESS;
 }
 //write element with timestamp to file
