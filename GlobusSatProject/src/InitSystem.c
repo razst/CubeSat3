@@ -149,6 +149,7 @@ int InitSubsystems()
 
 	EPS_Init(); // ???
 	InitTrxvu();
+	InitializeFS(isFirstActivation());
 	// TODO error handaling
 	return 0;
 }

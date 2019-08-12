@@ -52,11 +52,64 @@ static int setNumOfChainsInFS(int new_num_of_chains)
 	FRAM_write(&fs,FSFRAM,sizeof(fs));
 	return 0;
 }
+
 FileSystemResult InitializeFS(Boolean first_time)
 {
+	int ret;
+	hcc_mem_init(); /* Initialize the memory to be used by filesystem */
+
+	ret = fs_init(); /* Initialize the filesystem */
+	if(ret != F_NO_ERROR )
+	{
+		TRACE_ERROR("fs_init pb: %d\n\r", ret);
+		return FS_FAT_API_FAIL;
+	}
+
+	ret = f_enterFS(); /* Register this task with filesystem */
+	if(ret != F_NO_ERROR )
+	{
+		TRACE_ERROR("f_enterFS pb: %d\n\r", ret);
+		return FS_FAT_API_FAIL;
+	}
+
+	ret = f_initvolume( 0, atmel_mcipdc_initfunc, _SD_CARD ); /* Initialize volID as safe */
+
+	if( F_ERR_NOTFORMATTED == ret )
+	{
+		TRACE_ERROR("Filesystem not formated!\n\r");
+		return FS_FAT_API_FAIL;
+	}
+	else if( F_NO_ERROR != ret)
+	{
+		TRACE_ERROR("f_initvolume pb: %d\n\r", ret);
+		return FS_FAT_API_FAIL;
+	}
+	if(first_time)
+	{
+		delete_allTMFilesFromSD();
+		FS fs = {0};
+		if(FRAM_write((unsigned char*)&fs,FSFRAM,sizeof(FS))!=0)
+		{
+			return FS_FAT_API_FAIL;
+		}
+	}
+
+	F_SPACE space;
+	/* get free space on current drive */
+	ret = f_getfreespace(f_getdrive(),&space);
+	if(!ret)
+	{
+	printf("There are %lu bytes total, %lu bytes free, \
+	%lu bytes used, %lu bytes bad.",
+	space.total, space.free, space.used, space.bad);
+	}
+	else
+	{
+	printf("\nError %d reading drive\n", ret);
+	}
+
 	return FS_SUCCSESS;
 }
-
 //only register the chain, files will create dynamically
 FileSystemResult c_fileCreate(char* c_file_name,int size_of_element, C_FILE* c_file)
 {
