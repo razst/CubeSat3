@@ -22,6 +22,20 @@
 #ifndef FSFRAM
 #define FSFRAM 0x20000
 #endif
+
+#define FILE_NAME_WITH_INDEX_SIZE MAX_F_FILE_NAME_SIZE+sizeof(int)*2
+
+//struct for chain file info
+typedef struct
+{
+	int size_of_element;
+	char name[FILE_NAME_WITH_INDEX_SIZE];
+	unsigned int creation_time;
+	unsigned int last_time_modified;
+	int num_of_files;
+
+} C_FILE;
+
 typedef enum
 {
 	FS_SUCCSESS,
@@ -64,7 +78,7 @@ void DeInitializeFS();
  * FS_SUCCSESS on success.
  */
 FileSystemResult c_fileCreate(char* c_file_name,
-		int size_of_element);
+		int size_of_element, C_FILE* c_file);
 /*!
  * Write element to c_file.
  * @param c_file_name the name of the c_file.

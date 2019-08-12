@@ -32,13 +32,13 @@ void taskMain()
 	InitSubsystems();
 
 	while (TRUE) {
-		EPS_Conditioning();
+		//EPS_Conditioning();
 
-		TRX_Logic();
+		//TRX_Logic();
 
 		TelemetryCollectorLogic();
 
-		Maintenance();
+		//Maintenance();
 
 		// Payload_Logic();
 	}

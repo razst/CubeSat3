@@ -29,7 +29,7 @@ int ActUponCommand(sat_packet_t *cmd)
 		trxvu_command_router(&cmd);
 		break;
 	default:
-		return
+		return 0;
 	}
 	return 0;
 }

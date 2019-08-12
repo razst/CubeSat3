@@ -5,6 +5,7 @@
 
 #include "GlobalStandards.h"
 #include "SatCommandHandler.h"
+#include "SPL.h"
 
 
 typedef struct __attribute__ ((__packed__)) delayed_cmd_t
@@ -29,8 +30,8 @@ int AssmbleCommand(unsigned char *data, unsigned int data_length, char type,
 {
 	cmd->ID=id;
 	cmd->cmd_subtype = subtype;
-	cmd->cmd_type = type
-	cmd->data = data;
+	cmd->cmd_type = type;
+	memcpy(cmd->data, data, data_length);
 	cmd->length = data_length;
 	return 0;
 }
@@ -92,9 +93,10 @@ int AddDelayedCommand(sat_packet_t *cmd)
 int GetDelayedCommandBufferCount()
 {
 	int num = 0;
+	time_unix cmdTime;
 	for(int i = 0; i < MAX_DELAYED_COMMAND ; i++){
-		FRAM_read(&delayed_cmd_t , DELAYED_COMMAND_DUE_ADDR + (i*DELAYED_COMMAND_DUE_SIZE), DELAYED_COMMAND_DUE_SIZE);
-		if(delayed_cmd_t != -1){
+		FRAM_read(&cmdTime , DELAYED_COMMAND_DUE_ADDR + (i*DELAYED_COMMAND_DUE_SIZE), DELAYED_COMMAND_DUE_SIZE);
+		if(cmdTime != -1){
 			num++;
 			}
 	}
@@ -115,10 +117,9 @@ int GetOnlineCommand(sat_packet_t *cmd)
 	if (err !=0)
 		return err;
 	sat_packet_t command;
-	int err = ParseDataToCommand(&data,MAX_COMMAND_DATA_LENGTH,&command);
+	err = ParseDataToCommand(&data,MAX_COMMAND_DATA_LENGTH,&command);
 	if (err !=0)
 		return err;
-	cmd = &command;
 	SendAckPacket(ACK_RECEIVE_COMM,&command,NULL,0);
 
 	return 0;

@@ -22,7 +22,6 @@
 #define SKIP_FILE_TIME_SEC 1000000
 #define _SD_CARD 0
 #define FIRST_TIME -1
-#define FILE_NAME_WITH_INDEX_SIZE MAX_F_FILE_NAME_SIZE+sizeof(int)*2
 
 //struct for filesystem info
 typedef struct
@@ -32,16 +31,6 @@ typedef struct
 //TODO remove all 'PLZNORESTART' from code!!
 #define PLZNORESTART() gom_eps_hk_basic_t myEpsTelemetry_hk_basic;	(GomEpsGetHkData_basic(0, &myEpsTelemetry_hk_basic)); //todo delete
 
-//struct for chain file info
-typedef struct
-{
-	int size_of_element;
-	char name[FILE_NAME_WITH_INDEX_SIZE];
-	unsigned int creation_time;
-	unsigned int last_time_modified;
-	int num_of_files;
-
-} C_FILE;
 #define C_FILES_BASE_ADDR (FSFRAM+sizeof(FS))
 
 
@@ -69,29 +58,66 @@ FileSystemResult InitializeFS(Boolean first_time)
 }
 
 //only register the chain, files will create dynamically
-FileSystemResult c_fileCreate(char* c_file_name,int size_of_element)
+FileSystemResult c_fileCreate(char* c_file_name,int size_of_element, C_FILE* c_file)
 {
-	/*
-	time_unix currTime = Time_getUnixEpoch();
-	C_FILE c_file;
-	c_file.name = c_file_name;
-	c_file.creation_time = currTime;
-	c_file.last_time_modified = -1;
-	c_file.num_of_files = 0;
-	c_file.size_of_element = size_of_element;
-	int err = FRAM_write(&c_file,C_FILES_BASE_ADDR*(getNumOfChainsInFS()+sizeof(c_file)),sizeof(c_file));
+
+	time_unix currTime;
+	Time_getUnixEpoch(&currTime);
+
+	strcpy(c_file->name,c_file_name);
+	c_file->creation_time = currTime;
+	c_file->last_time_modified = -1;
+	c_file->num_of_files = 0;
+	c_file->size_of_element = size_of_element;
+	int err = FRAM_write(&c_file,C_FILES_BASE_ADDR*(getNumOfChainsInFS()+sizeof(*c_file)),sizeof(*c_file));
 	setNumOfChainsInFS(getNumOfChainsInFS()+1);
 	if(err < 0)
-		return FS_FRAM_FAIL;*/
+		return FS_FRAM_FAIL;
 	return FS_SUCCSESS;
 }
 //write element with timestamp to file
 static void writewithEpochtime(F_FILE* file, byte* data, int size,unsigned int time)
 {
+	int number_of_writes;
+	number_of_writes = f_write( &time,sizeof(unsigned int),1, file );
+	number_of_writes += f_write( data, size,1, file );
+	printf("writing element to file, time is: %u\n",time);
+	if(number_of_writes!=2)
+	{
+		// make sure we wrote twice ! TODO: we si did write once - the whole file will be corrupted because there is a missing data only time
+		printf("writewithEpochtime error\n");
+	}
+	f_flush( file ); /* only after flushing can data be considered safe */
+	f_close( file ); /* data is also considered safe when file is closed */
 }
+
+
 // get C_FILE struct from FRAM by name
 static Boolean get_C_FILE_struct(char* name,C_FILE* c_file,unsigned int *address)
 {
+	int i;
+	unsigned int c_file_address = 0;
+	int err_read=0;
+	int num_of_files_in_FS = getNumOfChainsInFS();
+	for(i =0; i < num_of_files_in_FS; i++)			//search correct c_file struct
+	{
+		c_file_address= C_FILES_BASE_ADDR+sizeof(C_FILE)*(i);
+		err_read = FRAM_read((unsigned char*)c_file,c_file_address,sizeof(C_FILE));
+		if(0 != err_read)
+		{
+			printf("FRAM error in 'get_C_FILE_struct()' error = %d\n",err_read);
+			return FALSE;
+		}
+
+		if(!strcmp(c_file->name,name))//if  strcmp equals return 0
+		{
+			if(address != NULL)
+			{
+				*address = c_file_address;
+			}
+			return TRUE;
+		}
+	}
 	return FALSE;
 }
 //calculate index of file in chain file by time
@@ -102,18 +128,45 @@ static int getFileIndex(unsigned int creation_time, unsigned int current_time)
 //write to curr_file_name
 void get_file_name_by_index(char* c_file_name,int index,char* curr_file_name)
 {
-	//get
-	//int index = getFileIndex()
+	sprintf(curr_file_name,"%s%d.%s", c_file_name, index, FS_FILE_ENDING); // sentence that include all paramatrim
 }
+
 FileSystemResult c_fileReset(char* c_file_name)
 {
 	return FS_SUCCSESS;
 }
 
+
 FileSystemResult c_fileWrite(char* c_file_name, void* element)
 {
+	C_FILE c_file;
+	unsigned int addr;//FRAM ADDRESS
+	F_FILE *file;
+	char curr_file_name[MAX_F_FILE_NAME_SIZE];
+
+	unsigned int curr_time;
+	Time_getUnixEpoch(&curr_time);
+	if(get_C_FILE_struct(c_file_name,&c_file,&addr)!=TRUE)//get c_file
+	{
+		// no C file found - guess this is the first time we try to save this type, than create it
+		c_fileCreate(c_file_name,sizeof(c_file_name),&c_file);
+		//return FS_NOT_EXIST;
+	}
+	int index_current = getFileIndex(c_file.creation_time,curr_time);
+	get_file_name_by_index(c_file_name,index_current,curr_file_name);
+
+	file = f_open(curr_file_name,"a+");//a+ append to file readble do write in the end
+	writewithEpochtime(file,element,c_file.size_of_element,curr_time);
+	c_file.last_time_modified= curr_time;
+	if(FRAM_write((unsigned char *)&c_file,addr,sizeof(C_FILE))!=0)//update last written
+	{
+		return FS_FRAM_FAIL;
+	}
+	f_close(file);
+	f_releaseFS();
 	return FS_SUCCSESS;
 }
+
 FileSystemResult fileWrite(char* file_name, void* element,int size)
 {
 	F_FILE *file;

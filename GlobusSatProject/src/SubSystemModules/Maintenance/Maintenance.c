@@ -18,7 +18,7 @@
 
 Boolean CheckExecutionTime(time_unix prev_time, time_unix period)
 {
-	return FALSE;
+	return TRUE; // TODO change this !!
 }
 
 Boolean CheckExecTimeFromFRAM(unsigned int fram_time_addr, time_unix period)
@@ -48,20 +48,32 @@ void ResetGroundCommWDT()
 // and return a boolean describing it.
 Boolean IsGroundCommunicationWDTKick()
 {
+	if ( DEFAULT_NO_COMM_WDT_KICK_TIME)
+		restart();//LAST TIME THAT WAS COMMUNICATION
 	return FALSE;
 }
 
 //TODO: add to command dictionary
 int SetGsWdtKickTime(time_unix new_gs_wdt_kick_time)
 {
+
+	//by diana
+	if (new_gs_wdt_kick_time< 86400*2 || new_gs_wdt_kick_time>1*86400)
+		return -3;
+	int err=  FRAM_write(&new_gs_wdt_kick_time, LAST_WAKEUP_TIME_ADDR, LAST_WAKEUP_TIME_SIZE);
+	if (err!=0)
+	  return err;
 	return 0;
 }
 
 time_unix GetGsWdtKickTime()
 {
+	//by diana
 	time_unix no_comm_thresh = 0;
+	int err= FRAM_read(&no_comm_thresh, NO_COMM_WDT_KICK_TIME_ADDR, NO_COMM_WDT_KICK_TIME_SIZE);
+	if (err!=0)
+		  return err;
 	return no_comm_thresh;
-
 }
 
 void Maintenance()

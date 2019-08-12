@@ -92,7 +92,7 @@ int TRX_Logic() {
 	}else if (GetDelayedCommandBufferCount()>0 && isDelayedCommandDue(currTime,NULL)){
 		 i = GetDelayedCommand(&cmd);
 	}
-	if(cmd != -1)
+	if(cmd.ID != -1) // we have an onlie or delayed command to exec
 		ActUponCommand(&cmd);
 
 	if(i != -1)
