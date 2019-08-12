@@ -144,11 +144,7 @@ void TelemetrySaveWOD()
 	TestWOD wodData;
 	// get free heap size - this is for testing only to test the code on the HW...
 	int err = xPortGetFreeHeapSize();
-
-	// for DEBUG, print the value
-	char buffer[20];
-	itoa(err,buffer,10);
-	vPrintString(buffer);
+	sprintf("heap size is:%d\n",err);
 
 	if (err!=-1){
 		wodData.heapSize = err;
